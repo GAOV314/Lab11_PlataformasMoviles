@@ -16,14 +16,17 @@ data class Post(
     val text: String,
     val imageUrl: String? = null,
     val fileUrl: String? = null,
-    val timestamp: Long
+    val timestamp: Long,
+    val firstName: String = "Anónimo",  // Nombre del autor
+    val lastName: String = ""           // Apellido del autor
 )
+
 @Composable
 fun BlogScreen() {
     val firestore = FirebaseFirestore.getInstance()
-    val posts = remember { mutableStateListOf<Post>() } // Estado para mantener la lista de posts
+    val posts = remember { mutableStateListOf<Post>() }
     val coroutineScope = rememberCoroutineScope()
-// Cargar publicaciones de Firebase cuando se inicie el Composable
+
     LaunchedEffect(Unit) {
         coroutineScope.launch {
             val snapshot = firestore.collection("posts")
@@ -35,13 +38,15 @@ fun BlogScreen() {
                     text = doc.getString("text") ?: "",
                     imageUrl = doc.getString("imageUrl"),
                     fileUrl = doc.getString("fileUrl"),
-                    timestamp = doc.getLong("timestamp") ?: 0L
+                    timestamp = doc.getLong("timestamp") ?: 0L,
+                    firstName = doc.getString("firstName") ?: "Anónimo",
+                    lastName = doc.getString("lastName") ?: ""
                 )
             }
             posts.addAll(fetchedPosts)
         }
     }
-// Mostrar publicaciones en un LazyColumn
+
     LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         items(posts) { post ->
             PostItem(post = post)
@@ -49,6 +54,7 @@ fun BlogScreen() {
         }
     }
 }
+
 @Composable
 fun PostItem(post: Post) {
     Box(
@@ -57,13 +63,23 @@ fun PostItem(post: Post) {
             .padding(8.dp)
     ) {
         Column {
-// Mostrar el texto de la publicación
+            // Mostrar nombre y apellido del usuario
+            Text(
+                text = "Publicado por: ${post.firstName} ${post.lastName}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // Mostrar el texto de la publicación
             Text(
                 text = post.text,
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
-// Mostrar la imagen si existe, utilizando Coil
+
+            // Mostrar la imagen si existe, utilizando Coil
             post.imageUrl?.let { imageUrl ->
                 Image(
                     painter = rememberAsyncImagePainter(model = imageUrl),
@@ -74,19 +90,19 @@ fun PostItem(post: Post) {
                         .padding(bottom = 8.dp)
                 )
             }
-// Mostrar el link para descargar el archivo si existe
+
+            // Mostrar el link para descargar el archivo si existe
             post.fileUrl?.let { fileUrl ->
                 TextButton(onClick = {
-// Acción para descargar el archivo (o abrir el link en el navegador)
+                    // Acción para descargar el archivo (o abrir el link en el navegador)
                 }) {
                     Text("Descargar archivo")
                 }
             }
-// Mostrar la fecha de la publicación (timestamp)
+
+            // Mostrar la fecha de la publicación (timestamp)
             Text(
-                text = "Publicado: ${
-                    java.text.SimpleDateFormat("dd/MM/yyyy").format(post.timestamp)
-                }",
+                text = "Publicado: ${java.text.SimpleDateFormat("dd/MM/yyyy").format(post.timestamp)}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.primary
             )

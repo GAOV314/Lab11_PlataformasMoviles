@@ -15,13 +15,14 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
+import edu.uvg.personalblog.UserPreferences
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlin.math.log
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen() {
+fun HomeScreen(userPreferences: UserPreferences) {
     val context = LocalContext.current
 // Estado para el campo de texto
     var textState by remember { mutableStateOf(TextFieldValue()) }
@@ -79,7 +80,7 @@ fun HomeScreen() {
 // Ejecutar operación de subida en una corrutina
                     coroutineScope.launch {
                         Log.d("test", "before upload")
-                        val result = uploadPostToFirebase(textState.text, imageUri, fileUri)
+                        val result = uploadPostToFirebase(textState.text, imageUri, fileUri,userPreferences)
                         isUploading = false
                         if (result != null) {
                             uploadError = result
@@ -109,36 +110,47 @@ fun HomeScreen() {
     }
 }
 // Función para subir la publicación a Firebase (sin @Composable)
-suspend fun uploadPostToFirebase(text: String, imageUri: Uri?, fileUri: Uri?): String? {
+suspend fun uploadPostToFirebase(
+    text: String,
+    imageUri: Uri?,
+    fileUri: Uri?,
+    userPreferences: UserPreferences  // Agregar preferencias de usuario como parámetro
+): String? {
     val firestore = FirebaseFirestore.getInstance()
     val storage = FirebaseStorage.getInstance().reference
     var imageUrl: String? = null
     var fileUrl: String? = null
+
     return try {
-// Subir imagen si existe
+        // Obtener el nombre y apellido del usuario de UserPreferences
+        val firstName = userPreferences.firstName ?: "Anónimo"
+        val lastName = userPreferences.lastName ?: ""
+
+        // Subir imagen si existe
         if (imageUri != null) {
             val imageRef = storage.child("images/${System.currentTimeMillis()}.jpg")
             imageRef.putFile(imageUri).await()
             imageUrl = imageRef.downloadUrl.await().toString()
-            Log.d("Image URL", imageUrl.toString())
         }
-// Subir archivo si existe
+
+        // Subir archivo si existe
         if (fileUri != null) {
             val fileRef = storage.child("files/${System.currentTimeMillis()}")
             fileUrl = fileRef.putFile(fileUri).await().storage.downloadUrl.await().toString()
         }
-// Guardar los datos en Firestore
+
+        // Guardar los datos en Firestore
         val post = hashMapOf(
             "text" to text,
             "imageUrl" to imageUrl,
             "fileUrl" to fileUrl,
-            "timestamp" to System.currentTimeMillis()
+            "timestamp" to System.currentTimeMillis(),
+            "firstName" to firstName,  // Guardar nombre
+            "lastName" to lastName      // Guardar apellido
         )
         firestore.collection("posts").add(post).await()
         null
     } catch (e: Exception) {
-// Devuelve el mensaje de error
-        Log.d("Ocurrio error: ", e.message.toString())
         e.localizedMessage ?: "Error al subir la publicación"
     }
 }

@@ -49,13 +49,18 @@ fun MicroBlogApp(modifier: Modifier = Modifier, userPreferences: UserPreferences
 }
 
 @Composable
-fun NavHostContainer(navController: NavHostController, modifier: Modifier = Modifier, userPreferences: UserPreferences) {
+fun NavHostContainer(
+    navController: NavHostController,
+    modifier: Modifier = Modifier,
+    userPreferences: UserPreferences
+) {
     NavHost(navController = navController, startDestination = Screen.Home.route, modifier = modifier) {
-        composable(Screen.Home.route) { HomeScreen() }
+        composable(Screen.Home.route) { HomeScreen(userPreferences) }  // Pasar userPreferences a HomeScreen
         composable(Screen.Profile.route) { BlogScreen() }
-        composable(Screen.Settings.route) { SettingsScreen(userPreferences) }  // Pantalla de configuración
+        composable(Screen.Settings.route) { SettingsScreen(userPreferences) }
     }
 }
+
 
 @Composable
 fun BottomNavigationBar(navController: NavController) {
