@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "470073084800",
+    "project_id": "personalblog-5df7b",
+    "storage_bucket": "personalblog-5df7b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:470073084800:android:32e40e0990743b8b330f65",
+        "android_client_info": {
+          "package_name": "edu.uvg.personalblog"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyClABNiimb200T3K_GfykhdM-WqvdWJ5uQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
